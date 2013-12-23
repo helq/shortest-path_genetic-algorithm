@@ -1,0 +1,6 @@
+*~
+.directory
+*.pyc
+testFindings
+aTest.py
+clean.sh
