@@ -87,47 +87,71 @@ def test2():
     saveMaze(s, "png2simple.png")
 
 def test3():
-    n, m = 70, 80
+    n, m = 100, 120
 
     mazePerfect = createRandomMaze(n, m)
-    maze = deleteWalls(mazePerfect, 0.010)
+    maze = deleteWalls(mazePerfect, 0.040)
+
+    # maze without dead-ends
     mazeSimple = simplifyMaze(maze)
+
+    from random import random
+    mazeWeight = [[random() for j in range(m)] for i in range(n)]
+
     sol = findPath(maze)
     sol2 = findPath(maze)
 
-    import pickle
-    o = open('test.bin', 'wb')
-    #pickle.dump(mazePerfect, o)
-    pickle.dump(maze, o)
-    pickle.dump(mazeSimple, o)
-    pickle.dump(sol, o)
-    pickle.dump(sol2, o)
-    #o = open('test.bin', 'rb')
-    ##mazePerfect = pickle.load(o)
-    #maze = pickle.load(o)
-    #mazeSimple = pickle.load(o)
-    #sol = pickle.load(o)
-    #sol2 = pickle.load(o)
+    if True:
+        # Saving
+        import pickle
+        o = open('test.bin', 'wb')
+        #pickle.dump(mazePerfect, o)
+        pickle.dump(maze, o)
+        pickle.dump(mazeSimple, o)
+        pickle.dump(mazeWeight, o)
+        # this is a simple save, without using the optimized procedure
+        # savePath from src.savePaths
+        pickle.dump(sol, o)
+        pickle.dump(sol2, o)
+
+    else:
+        # Loading
+        o = open('test.bin', 'rb')
+        #mazePerfect = pickle.load(o)
+        maze = pickle.load(o)
+        mazeSimple = pickle.load(o)
+        mazeWeight = pickle.load(o)
+        sol = pickle.load(o)
+        sol2 = pickle.load(o)
 
     # saving
     # maze clean
     #s = createPNGfromMazeAndPaths(mazePerfect)
-    #saveMaze(s, "test3-clean.png")
+    #saveMaze(s, "test3-Perfect.png")
 
-    s = createPNGfromMazeAndPaths(maze, [sol, sol2])
+    s = createPNGfromMazeAndPaths(maze)
     saveMaze(s, "test3.png")
 
+    s = createPNGfromMazeAndPaths(maze, [sol, sol2])
+    saveMaze(s, "test3-paths.png")
+
     s = createPNGfromMazeAndPaths(mazeSimple)
-    saveMaze(s, "test3simple.png")
+    saveMaze(s, "test3-simple.png")
 
     solSon,k,l = crossingPaths(n, m, sol, sol2)
     s = createPNGfromMazeAndPaths(maze, [solSon])
-    saveMaze(s, "test3son.png")
+    saveMaze(s, "test3-son.png")
 
     # mutating
     solMut = mutatePath(maze, sol)
     s = createPNGfromMazeAndPaths(maze, [sol, solMut])
-    saveMaze(s, "test3mut.png")
+    saveMaze(s, "test3-original-and-mutated.png")
+
+    # finding shortest path
+    from src.shortestPath import shortestPath
+    solMut = shortestPath(maze, mazeWeight)
+    s = createPNGfromMazeAndPaths(maze, [sol, solMut])
+    saveMaze(s, "test3-shortest-path.png")
 
 def test4():
     import pypng.png as png
@@ -163,6 +187,6 @@ def test5():
 
 #testPNG()
 #test2()
-#test3()
-test4()
-test5()
+test3()
+#test4()
+#test5()
