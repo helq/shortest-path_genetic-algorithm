@@ -1,22 +1,19 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from src.definitions import *
 from src.createMazes import createRandomMaze, deleteWalls, simplifyMaze
-from src.pathsOfMaze import findPath, findIntersections, crossToPath
-from src.printMazes import palette, createPNGfromMazeAndPaths, saveMaze
-from src.genetics import crossingPaths, mutatePath, fitness, evolutionAlgo
+from src.pathsOfMaze import findPath
+from src.genetics import fitness, evolutionAlgo
 import argv
 
-import os
 from random import random
-from time import clock
-import pickle
-import sys
+#from time import clock
+import os, pickle, sys
+import os.path as path
 
 mazeFile = 'data.bin'
-folderInitialPop = 'initial/'
-folderFinalPop = 'final/'
+folderInitialPop = 'initial'
+folderFinalPop = 'final'
 
 options = argv.parse(sys.argv)
 
@@ -36,14 +33,13 @@ options:
                              python syntax. ex: `-f "lambda x: x"')
 
   -F --folder=name           folder to save the results
-  -P --savePaths=file        save the selected paths in `folder'/images/`file'
-                             path writted as `initial/012' or `final/010-001'
-                             (relative to `--folder')
   -I --initialPop=num        use an exisisting population (num of the
                              population in """+folderInitialPop+""")
                              This overwrite the option `-s'
 
-* setted only when the folder doesn't exist
+  * setted only when the folder doesn't exist
+
+to save paths in a PNG see `pathsToPNG.py'
 """
 
 def main(folder):
@@ -85,14 +81,14 @@ def main(folder):
 
     if not os.path.exists(folder):
         os.makedirs(folder)
-        os.makedirs(folder+folderInitialPop)
-        os.makedirs(folder+folderFinalPop)
-        open(folder+folderInitialPop+'counter','wb').write('0')
-        open(folder+folderFinalPop+'counters','wb').write('[]')
+        os.makedirs( path.join(folder, folderInitialPop) )
+        os.makedirs( path.join(folder, folderFinalPop) )
+        open( path.join(folder, folderInitialPop, 'counter'),'wb').write('0')
+        open( path.join(folder, folderFinalPop, 'counters'),'wb').write('[]')
 
     ######################## Maze #######################
-    if os.path.exists(folder+mazeFile):
-        o = open(folder+mazeFile, 'rb')
+    if os.path.exists( path.join(folder, mazeFile) ):
+        o = open( path.join(folder, mazeFile), 'rb')
         n = pickle.load(o)
         m = pickle.load(o)
         wallsToDel = pickle.load(o)
@@ -105,7 +101,7 @@ def main(folder):
         mazeSimple = simplifyMaze(maze)
         mazeWeigth = [[random() for j in range(m)] for i in range(n)]
 
-        o = open(folder+mazeFile, 'wb')
+        o = open( path.join(folder, mazeFile), 'wb')
         pickle.dump(n, o)
         pickle.dump(m, o)
         pickle.dump(wallsToDel, o)
@@ -120,20 +116,20 @@ def main(folder):
 
     ######################## initial Population #######################
     if initialPop == None:
-        counter = int(open(folder+folderInitialPop+'counter','rb').read())
+        counter = int(open( path.join(folder, folderInitialPop, 'counter'),'rb').read())
 
         initialPopulation = [findPath(mazeSimple) for i in range(sizeInitial)]
         initialPopulation.sort(key=lambda i: fitness(mazeWeigth, i))
         nameInitialPop = str(counter).zfill(3)
-        o = open(folder+folderInitialPop+nameInitialPop, 'wb')
+        o = open( path.join(folder, folderInitialPop, nameInitialPop), 'wb')
         pickle.dump(initialPopulation, o)
         o.close()
 
-        open(folder+folderInitialPop+'counter','wb').write(str(counter+1))
+        open( path.join(folder, folderInitialPop, 'counter'),'wb').write(str(counter+1))
     else:
         counter = int(initialPop, 10)
         nameInitialPop = str(counter).zfill(3)
-        o = open(folder+folderInitialPop+nameInitialPop, 'rb')
+        o = open( path.join(folder, folderInitialPop, nameInitialPop), 'rb')
         initialPopulation = pickle.load(o)
         o.close()
 
@@ -159,7 +155,7 @@ def main(folder):
             totalPopulation, totalIterations , badIndividuals,
             chooseFunction)
 
-    counters = eval(open(folder+folderFinalPop+'counters','rb').read())
+    counters = eval(open( path.join(folder, folderFinalPop, 'counters'),'rb').read())
     if len(counters) <= counter:
         counters.extend( [-1]*(counter-len(counters)) )
         counters.append(0)
@@ -174,37 +170,10 @@ def main(folder):
     print "best path: ", fitness(mazeWeigth, finalPopulation[0])
     print "worst path:", fitness(mazeWeigth, finalPopulation[-1])
 
-    o = open(folder+folderFinalPop+nameFinalPop, 'wb')
+    o = open( path.join(folder, folderFinalPop, nameFinalPop), 'wb')
     pickle.dump(finalPopulation, o)
     o.close()
-    open(folder+folderFinalPop+'counters','wb').write(str(counters))
-
-
-def savePathsFromFile(pathsFile, folder):
-    o = open(folder+pathsFile, 'rb')
-    population = pickle.load(o)
-    o.close()
-
-    o = open(folder+mazeFile, 'rb')
-    n = pickle.load(o)
-    m = pickle.load(o)
-    wallsToDel = pickle.load(o)
-    maze = pickle.load(o)
-    mazeSimple = pickle.load(o)
-    mazeWeigth = pickle.load(o)
-    o.close()
-
-    savePathsAsImage( maze, mazeWeigth, population,
-                      folder+'images/'+pathsFile+'/')
-
-def savePathsAsImage(maze, mazeWeigth, paths, folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    for i in range(len(paths)):
-        png = createPNGfromMazeAndPaths(maze, [paths[i]])
-        fitnessPath = fitness(mazeWeigth, paths[i])
-        saveMaze(png, folder+str(i).zfill(3)+'-'+str(fitnessPath)+'.png')
-
+    open( path.join (folder, folderFinalPop, 'counters'),'wb').write(str(counters))
 
 
 if __name__ == "__main__":
@@ -215,12 +184,7 @@ if __name__ == "__main__":
         print help_message
         exit(1)
 
-    if folder[-1] != '/': folder += '/'
-
     if 'h' in options or 'help' in options:
         print help_message
-    elif 'P' in options or 'savePaths' in options:
-        pathsFile = options['P'] if ('P' in options) else options['savePaths']
-        savePathsFromFile(pathsFile, folder)
     else:
         main(folder)
