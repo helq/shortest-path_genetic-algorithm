@@ -4,6 +4,7 @@
 from src.createMazes import createRandomMaze, deleteWalls, simplifyMaze
 from src.pathsOfMaze import findPath
 from src.genetics import fitness, evolutionAlgo
+from src.savePaths import saveListOfPaths, loadListOfPaths
 import argv
 
 from random import random
@@ -19,8 +20,8 @@ options = argv.parse(sys.argv)
 
 help_message = "usage: " + ' '.join(options['_']) + " [option] " + """\n
 options:
-      --dim=n,m              dimensions of the maze *
-  -d --wallsToDel=float      percent of the walls to delete *
+      --dim=n,m              * dimensions of the maze
+  -d --wallsToDel=float      * percent of the walls to delete
   -s --sizeInitial=num       size of initial population
   -m --mutationPercent=float percent of mutation, probability of mutate in a
                              determined cycle (iteration)
@@ -96,12 +97,12 @@ def main(folder):
         wallsToDel = pickle.load(o)
         maze = pickle.load(o)
         mazeSimple = pickle.load(o)
-        mazeWeigth = pickle.load(o)
+        mazeWeight = pickle.load(o)
         o.close()
     else:
         maze = deleteWalls(createRandomMaze(n, m), wallsToDel)
         mazeSimple = simplifyMaze(maze)
-        mazeWeigth = [[random() for j in range(m)] for i in range(n)]
+        mazeWeight = [[random() for j in range(m)] for i in range(n)]
 
         o = open( path.join(folder, mazeFile), 'wb')
         pickle.dump(n, o)
@@ -109,10 +110,10 @@ def main(folder):
         pickle.dump(wallsToDel, o)
         pickle.dump(maze, o)
         pickle.dump(mazeSimple, o)
-        pickle.dump(mazeWeigth, o)
+        pickle.dump(mazeWeight, o)
         o.close()
 
-    print "variables setted to:"
+    print " Variables setted to:"
     print "dimensions: ("+str(n)+", "+str(m)+")"
     print "walls deleted (percentage):", wallsToDel
 
@@ -121,10 +122,15 @@ def main(folder):
         counter = int(open( path.join(folder, folderInitialPop, 'counter'),'rb').read())
 
         initialPopulation = [findPath(mazeSimple) for i in range(sizeInitial)]
-        initialPopulation.sort(key=lambda i: fitness(mazeWeigth, i))
+        initialPopulation.sort(key=lambda i: fitness(mazeWeight, i))
         nameInitialPop = str(counter).zfill(3)
+
         o = open( path.join(folder, folderInitialPop, nameInitialPop), 'wb')
-        pickle.dump(initialPopulation, o)
+        saveListOfPaths(initialPopulation, o)
+        o.close()
+
+        o = open( path.join(folder, folderInitialPop, nameInitialPop), 'rb')
+        new = loadListOfPaths(o)
         o.close()
 
         open( path.join(folder, folderInitialPop, 'counter'),'wb').write(str(counter+1))
@@ -132,7 +138,7 @@ def main(folder):
         counter = int(initialPop, 10)
         nameInitialPop = str(counter).zfill(3)
         o = open( path.join(folder, folderInitialPop, nameInitialPop), 'rb')
-        initialPopulation = pickle.load(o)
+        initialPopulation = loadListOfPaths(o)
         o.close()
 
     ##################################################################
@@ -144,16 +150,16 @@ def main(folder):
     print "number of bad individuals:", badIndividuals
     print
 
-    print "statistics"
+    print "== Statistics =="
     print "initial population", nameInitialPop
-    print "best path: ", fitness(mazeWeigth, initialPopulation[0])
-    print "worst path:", fitness(mazeWeigth, initialPopulation[-1])
+    print "best path: ", fitness(mazeWeight, initialPopulation[0])
+    print "worst path:", fitness(mazeWeight, initialPopulation[-1])
     print
 
 
     ####################### final population #######################
-    finalPopulation, num_clones = evolutionAlgo(
-            maze, mazeWeigth, initialPopulation , mutPercent,
+    finalPopulation, num_clones, num_mutated = evolutionAlgo(
+            maze, mazeWeight, initialPopulation , mutPercent,
             totalPopulation, totalIterations , badIndividuals,
             chooseFunction)
 
@@ -165,15 +171,18 @@ def main(folder):
         counters[counter] += 1
 
     print "num of clones in the ejecution:", num_clones
+    print "num of mutations in the ejecution:", num_mutated
     print
 
     nameFinalPop = str(counter).zfill(3)+'-'+str(counters[counter]).zfill(3)
     print "final population", nameFinalPop
-    print "best path: ", fitness(mazeWeigth, finalPopulation[0])
-    print "worst path:", fitness(mazeWeigth, finalPopulation[-1])
+    print "best path: ", fitness(mazeWeight, finalPopulation[0])
+    print "worst path:", fitness(mazeWeight, finalPopulation[-1])
 
     o = open( path.join(folder, folderFinalPop, nameFinalPop), 'wb')
-    pickle.dump(finalPopulation, o)
+    saveListOfPaths(finalPopulation, o)
+    pickle.dump(num_clones, o)
+    pickle.dump(num_mutated, o)
     o.close()
     open( path.join (folder, folderFinalPop, 'counters'),'wb').write(str(counters))
 

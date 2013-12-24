@@ -3,6 +3,7 @@
 
 from src.printMazes import createPNGfromMazeAndPaths, saveMaze
 from src.genetics import fitness, evolutionAlgo
+from src.savePaths import loadListOfPaths
 
 import os.path as path
 import os, sys, pickle
@@ -20,7 +21,7 @@ help_message = "usage: " + sys.argv[0] + " file" + """\n
 
 def savePathsFromFile(pathsFile, folder):
     o = open(path.join(folder, pathsFile), 'rb')
-    population = pickle.load(o)
+    population = loadListOfPaths(o)
     o.close()
 
     o = open(path.join(folder, mazeFile), 'rb')

@@ -2,7 +2,7 @@ from definitions import *
 from random import randint, random
 from pathsOfMaze import findIntersections, findPath
 from math import floor
-from heapq import *
+from heapq import heapify, heappush
 
 def crossingPaths(height, width, path1, path2):
     crossPoints = findIntersections(height, width, path1, path2)
@@ -62,17 +62,17 @@ def mutatePath(maze0, path):
 
     return path[:startMut] + findPath(maze, startPoint, endPoint) + path[endMut+1:]
 
-def fitness(mazeWeigth, path):
-    height = len(mazeWeigth)
-    width = len(mazeWeigth[0])
+def fitness(mazeWeight, path):
+    height = len(mazeWeight)
+    width = len(mazeWeight[0])
 
     w = 0
     for (i,j) in path:
         if i>=0 and i<height and j>=0 and j<width:
-            w+=mazeWeigth[i][j]
+            w+=mazeWeight[i][j]
     return w
 
-def evolutionAlgo( maze, mazeWeigth, initialPopulation, mutPercent
+def evolutionAlgo( maze, mazeWeight, initialPopulation, mutPercent
                  , totalPopulation, totalIterations, numberOfBadIndividuals
                  , randomVariableFunction):
 
@@ -86,12 +86,13 @@ def evolutionAlgo( maze, mazeWeigth, initialPopulation, mutPercent
     width = len(maze[0])
 
     population = [
-                    (fitness(mazeWeigth, individual), individual[:])
+                    (fitness(mazeWeight, individual), individual[:])
                     for individual in initialPopulation
                  ]
     heapify(population)
 
-    clones = 0
+    num_clones = 0
+    num_mutated = 0
     for i in range(totalIterations):
         if len(population) >= totalPopulation:
             toKill = randint(totalPopulation-numberOfBadIndividuals, totalPopulation-1)
@@ -103,7 +104,7 @@ def evolutionAlgo( maze, mazeWeigth, initialPopulation, mutPercent
             while j < len(population)-1:
                 if population[j] == population[j+1]:
                     population.pop(j+1)
-                    clones+=1
+                    num_clones+=1
                 else:
                     j+=1
 
@@ -111,7 +112,11 @@ def evolutionAlgo( maze, mazeWeigth, initialPopulation, mutPercent
         if random() < mutPercent:
             toMutate = population[randint(0, len(population)-1)]
             mutated = mutatePath(maze, toMutate[1])
-            heappush( population, (fitness(mazeWeigth, mutated), mutated) )
+
+            # is realy a mutation?
+            if mutated != toMutate[1]:
+                num_mutated += 1
+                heappush( population, (fitness(mazeWeight, mutated), mutated) )
         else:
             n1, n2 = getTwoNumbers(len(population))
             path1 = population[n1][1]
@@ -121,18 +126,20 @@ def evolutionAlgo( maze, mazeWeigth, initialPopulation, mutPercent
                 continue
             else:
                 heappush( population
-                        , (fitness(mazeWeigth, newPath[0]), newPath[0]) )
+                        , (fitness(mazeWeight, newPath[0]), newPath[0]) )
 
     population.sort()
+    # killing clones
     j=0
     while j < len(population)-1:
         if population[j] == population[j+1]:
             population.pop(j+1)
-            clones+=1
+            num_clones+=1
         else:
             j+=1
 
     return (
                 [individual[1] for individual in sorted(population)]
-              , clones
+              , num_clones
+              , num_mutated
            )

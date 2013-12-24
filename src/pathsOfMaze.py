@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from random import randint, random
 from definitions import *
 
 def detectMoves((i, j), (ip,jp), (n, m), maze):

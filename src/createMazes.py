@@ -3,8 +3,6 @@
 
 from random import randint, random
 from definitions import *
-from operator import eq, gt
-from collections import deque
 
 def detectValidMoves(i, j, n, m, prevMove):
     nextMoves = []
