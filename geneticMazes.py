@@ -37,6 +37,8 @@ options:
                              population in """+folderInitialPop+""")
                              This overwrite the option `-s'
 
+  -h --help                  Show this help
+
   * setted only when the folder doesn't exist
 
 to save paths in a PNG see `pathsToPNG.py'

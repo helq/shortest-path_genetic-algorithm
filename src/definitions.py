@@ -10,18 +10,25 @@ ALLWALLS = LEFT | UP | RIGHT | DOWN
 
 MARK = 16
 
+
 existWall = lambda tW, c: bool(tW & c)
-putWall = lambda tW, c: tW | c
-quitWall = lambda tW, c: tW ^ c
+def putWall(wall, maze, i, j):
+    maze[i][j] = wall | maze[i][j]
+def quitWall(wall, maze, i, j):
+    maze[i][j] = wall ^ maze[i][j]
 
-addMark = lambda c: c | MARK
-quitMark = lambda c: c ^ MARK
-isMark = lambda c: bool(c & MARK)
 
-# generate random sequence of moves
-def randomizeMoves( moves = [LEFT, UP, RIGHT, DOWN] ):
-    if len(moves) > 1:
-        for i in range(len(moves)-1, 0, -1):
+isMarked = lambda c: bool(c & MARK)
+def addMark(maze, i, j):
+    maze[i][j] = maze[i][j] | MARK
+def quitMark(maze, i, j):
+    maze[i][j] = maze[i][j] ^ MARK
+
+
+# reareange all the positions randomly
+def randomizeList( l ):
+    if len(l) > 1:
+        for i in range(len(l)-1, 0, -1):
             tmp = randint(0,i)
-            moves[i], moves[tmp] = moves[tmp], moves[i]
-    return moves
+            l[i], l[tmp] = l[tmp], l[i]
+    return l

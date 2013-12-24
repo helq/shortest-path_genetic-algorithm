@@ -10,25 +10,25 @@ def detectMoves((i, j), (ip,jp), (n, m), maze):
     if (        j>0
             and (i,j-1) != (ip,jp)
             and not existWall(LEFT, maze[i][j])
-            and not isMark(maze[i][j-1])
+            and not isMarked(maze[i][j-1])
        ):
         nextMoves.append( (i,j-1) )
     if (        i>0
             and (i-1,j) != (ip,jp)
             and not existWall(UP, maze[i][j])
-            and not isMark(maze[i-1][j])
+            and not isMarked(maze[i-1][j])
        ):
         nextMoves.append( (i-1,j) )
     if (        j<m-1
             and (i,j+1) != (ip,jp)
             and not existWall(RIGHT, maze[i][j])
-            and not isMark(maze[i][j+1])
+            and not isMarked(maze[i][j+1])
        ):
         nextMoves.append( (i,j+1) )
     if (        i<n-1
             and (i+1,j) != (ip,jp)
             and not existWall(DOWN, maze[i][j])
-            and not isMark(maze[i+1][j])
+            and not isMarked(maze[i+1][j])
        ):
         nextMoves.append( (i+1,j) )
 
@@ -46,8 +46,8 @@ def findPath(maze0, entrance=None, exit=None):
     else:              (k, l, exitWall) = exit
 
     ms = detectMoves((i0, j0), (i0,j0), (n, m), maze)
-    stack = [(i0,j0, randomizeMoves(ms))]
-    maze[i0][j0] = addMark(maze[i0][j0])
+    stack = [(i0,j0, randomizeList(ms))]
+    addMark(maze, i0, j0)
 
     while not( stack == [] or stack[-1][:2] == (k,l) ):
         i, j, moves = stack[-1]
@@ -58,8 +58,8 @@ def findPath(maze0, entrance=None, exit=None):
             i1,j1 = moves.pop()
 
             ms = detectMoves((i1, j1), (i,j), (n, m), maze)
-            stack.append( (i1,j1, randomizeMoves(ms)) )
-            maze[i1][j1] = addMark(maze[i1][j1])
+            stack.append( (i1,j1, randomizeList(ms)) )
+            addMark(maze, i1, j1)
 
     if stack == []: return []
     else:

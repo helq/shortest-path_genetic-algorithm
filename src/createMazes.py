@@ -33,9 +33,10 @@ def createRandomMaze(n, m, entrance=None, exit=None):
     maze = [[ALLWALLS]*m for i in range(n)]
 
     # better than recursion
-    stack = [ (randint(0,n-1), randint(0,m-1), randomizeMoves()) ]
+    stack = [ (randint(0,n-1), randint(0,m-1),
+                randomizeList([LEFT, UP, RIGHT, DOWN])) ]
     i,j = stack[0][:2]
-    maze[i][j] = addMark(maze[i][j])
+    addMark(maze, i, j)
 
     while stack != []:
         (i,j, moves) = stack.pop()
@@ -47,36 +48,36 @@ def createRandomMaze(n, m, entrance=None, exit=None):
 
         # which move now
         if   mov == LEFT:
-            if j > 0 and not isMark(maze[i][j-1]):
-                maze[i][j]   = quitWall(LEFT , maze[i][j])
-                maze[i][j-1] = addMark(maze[i][j-1])
-                maze[i][j-1] = quitWall(RIGHT, maze[i][j-1])
+            if j > 0 and not isMarked(maze[i][j-1]):
+                quitWall(LEFT , maze, i, j)
+                addMark(maze, i, j-1)
+                quitWall(RIGHT, maze, i, j-1)
                 ms = detectValidMoves(i, j, n, m, LEFT)
-                stack.append( (i,j-1, randomizeMoves(ms)) )
+                stack.append( (i,j-1, randomizeList(ms)) )
 
         elif mov == UP:
-            if i > 0 and not isMark(maze[i-1][j]):
-                maze[i][j]   = quitWall(UP  , maze[i][j])
-                maze[i-1][j] = addMark(maze[i-1][j])
-                maze[i-1][j] = quitWall(DOWN, maze[i-1][j])
+            if i > 0 and not isMarked(maze[i-1][j]):
+                quitWall(UP  , maze, i, j)
+                addMark(maze, i-1, j)
+                quitWall(DOWN, maze, i-1, j)
                 ms = detectValidMoves(i, j, n, m, UP)
-                stack.append( (i-1,j, randomizeMoves(ms)) )
+                stack.append( (i-1,j, randomizeList(ms)) )
 
         elif mov == RIGHT:
-            if j < m-1 and not isMark(maze[i][j+1]):
-                maze[i][j]   = quitWall(RIGHT, maze[i][j])
-                maze[i][j+1] = addMark(maze[i][j+1])
-                maze[i][j+1] = quitWall(LEFT , maze[i][j+1])
+            if j < m-1 and not isMarked(maze[i][j+1]):
+                quitWall(RIGHT, maze, i, j)
+                addMark(maze, i, j+1)
+                quitWall(LEFT , maze, i, j+1)
                 ms = detectValidMoves(i, j, n, m, RIGHT)
-                stack.append( (i,j+1, randomizeMoves(ms)) )
+                stack.append( (i,j+1, randomizeList(ms)) )
 
         elif mov == DOWN:
-            if i < n-1 and not isMark(maze[i+1][j]):
-                maze[i][j]   = quitWall(DOWN, maze[i][j])
-                maze[i+1][j] = addMark(maze[i+1][j])
-                maze[i+1][j] = quitWall(UP  , maze[i+1][j])
+            if i < n-1 and not isMarked(maze[i+1][j]):
+                quitWall(DOWN, maze, i, j)
+                addMark(maze, i+1, j)
+                quitWall(UP  , maze, i+1, j)
                 ms = detectValidMoves(i, j, n, m, DOWN)
-                stack.append( (i+1,j, randomizeMoves(ms)) )
+                stack.append( (i+1,j, randomizeList(ms)) )
 
         if random() < 0.05 and len(stack) > 6:
             from math import floor
@@ -86,13 +87,13 @@ def createRandomMaze(n, m, entrance=None, exit=None):
     # quitting marks
     for i in range(n):
         for j in range(m):
-            maze[i][j] = quitMark(maze[i][j])
+            quitMark(maze, i, j)
 
     # walls of start and finish
     i, j, wall = entrance
-    maze[i][j] = quitWall(wall, maze[i][j])
+    quitWall(wall, maze, i, j)
     i, j, wall = exit
-    maze[i][j] = quitWall(wall, maze[i][j])
+    quitWall(wall, maze, i, j)
 
     return maze
 
@@ -124,11 +125,11 @@ def deleteWalls(maze0, quant):
 
     for i,j,mov in toDel:
         if mov == LEFT:
-            maze[i][j]   = quitWall(LEFT, maze[i][j])
-            maze[i][j-1] = quitWall(RIGHT, maze[i][j-1])
+            quitWall(LEFT, maze, i, j)
+            quitWall(RIGHT, maze, i, j-1)
         if mov == UP:
-            maze[i][j]   = quitWall(UP, maze[i][j])
-            maze[i-1][j] = quitWall(DOWN, maze[i-1][j])
+            quitWall(UP, maze, i, j)
+            quitWall(DOWN, maze, i-1, j)
 
     return maze
 
@@ -148,28 +149,28 @@ def getMoves((i, j), maze, mazeDFS):
     if (    j>0
             and not existWall(LEFT,  maze[i][j])
             and mazeDFS[i][j-1] == None
-            #and not isMark(maze[i][j-1])
+            #and not isMarked(maze[i][j-1])
             #and mazeDFS[i][j-1] != (i,j)
        ):
         moves.append( (i,j-1) )
     if (    i>0
             and not existWall(UP,    maze[i][j])
             and mazeDFS[i-1][j] == None
-            #and not isMark(maze[i-1][j])
+            #and not isMarked(maze[i-1][j])
             #and mazeDFS[i-1][j] != (i,j)
        ):
         moves.append( (i-1,j) )
     if (    j<m-1
             and not existWall(RIGHT, maze[i][j])
             and mazeDFS[i][j+1] == None
-            #and not isMark(maze[i][j+1])
+            #and not isMarked(maze[i][j+1])
             #and mazeDFS[i][j+1] != (i,j)
        ):
         moves.append( (i,j+1) )
     if (    i<n-1
             and not existWall(DOWN,  maze[i][j])
             and mazeDFS[i+1][j] == None
-            #and not isMark(maze[i+1][j])
+            #and not isMarked(maze[i+1][j])
             #and mazeDFS[i+1][j] != (i,j)
        ):
         moves.append( (i+1,j) )
@@ -178,10 +179,10 @@ def getMoves((i, j), maze, mazeDFS):
 def putAllWalls(maze, i, j):
     n, m = len(maze), len(maze[0])
     maze[i][j] = ALLWALLS
-    if j>0:   maze[i][j-1] = putWall(RIGHT, maze[i][j-1])
-    if i>0:   maze[i-1][j] = putWall(DOWN,  maze[i-1][j])
-    if j<m-1: maze[i][j+1] = putWall(LEFT,  maze[i][j+1])
-    if i<n-1: maze[i+1][j] = putWall(UP,    maze[i+1][j])
+    if j>0:   putWall(RIGHT, maze, i,   j-1)
+    if i>0:   putWall(DOWN,  maze, i-1, j)
+    if j<m-1: putWall(LEFT,  maze, i,   j+1)
+    if i<n-1: putWall(UP,    maze, i+1, j)
 
 def simplifyMaze(maze0, entrance=None, exit=None):
     maze = [x[:] for x in maze0]
@@ -229,14 +230,14 @@ def simplifyMaze(maze0, entrance=None, exit=None):
 
     while len(stack) != 0:
         i,j = stack.pop()
-        maze[i][j] = addMark(maze[i][j])
+        addMark(maze, i, j)
         iN,jN = mazeDFS[i][j]
 
         for i1,j1 in getAllMoves((i, j), maze):
             if (
                         None != mazeDFS[i1][j1]
                     and (i,j) != mazeDFS[i1][j1]
-                    and not isMark(maze[i1][j1])
+                    and not isMarked(maze[i1][j1])
                ):
                 stack.append( (i1,j1) )
 
@@ -245,15 +246,15 @@ def simplifyMaze(maze0, entrance=None, exit=None):
     #print '\n'.join([' '.join([str(1 if c!=None else 0).rjust(2) for c
     #                in x]) for x in mazeDFS])
     #print
-    #print '\n'.join([' '.join([str(1 if isMark(c) else 0).rjust(2) for c
+    #print '\n'.join([' '.join([str(1 if isMarked(c) else 0).rjust(2) for c
     #                in x]) for x in maze])
 
     for i in range(n):
         for j in range(m):
-            if not isMark(maze[i][j]):
+            if not isMarked(maze[i][j]):
                 putAllWalls(maze, i, j)
             else:
-                maze[i][j] = quitMark(maze[i][j])
+                quitMark(maze, i, j)
 
     #print r
     return maze

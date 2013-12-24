@@ -52,10 +52,10 @@ def mutatePath(maze0, path):
 
     for (i,j) in path[:startMut]:
         if i>=0 and i<height and j>=0 and j<width:
-            maze[i][j] = addMark(maze[i][j])
+            addMark(maze, i, j)
     for (i,j) in path[endMut+1:]:
         if i>=0 and i<height and j>=0 and j<width:
-            maze[i][j] = addMark(maze[i][j])
+            addMark(maze, i, j)
 
     startPoint = path[startMut] + (NOTHING,)
     endPoint   = path[endMut] + (NOTHING,)
