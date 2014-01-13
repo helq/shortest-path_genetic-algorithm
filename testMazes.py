@@ -56,7 +56,7 @@ def testPNG():
         elif s == u"┌": return  3 # LEFT & UP
         elif s == u"┐": return  6 #        UP & RIGHT
         elif s == u"┘": return 12 #             RIGHT & DOWN
-        elif s == u"└": return  9 # LEFT &      RIGHT
+        elif s == u"└": return  9 # LEFT &            & DOWN
         elif s == u"├": return  1 # LEFT
         elif s == u"┬": return  2 #        UP
         elif s == u"┤": return  4 #             RIGHT
@@ -87,21 +87,21 @@ def test2():
     saveMaze(s, "png2simple.png")
 
 def test3():
-    n, m = 100, 120
-
-    mazePerfect = createRandomMaze(n, m)
-    maze = deleteWalls(mazePerfect, 0.040)
-
-    # maze without dead-ends
-    mazeSimple = simplifyMaze(maze)
-
-    from random import random
-    mazeWeight = [[random() for j in range(m)] for i in range(n)]
-
-    sol = findPath(maze)
-    sol2 = findPath(maze)
+    n, m = 30, 40
 
     if True:
+        mazePerfect = createRandomMaze(n, m)
+        maze = deleteWalls(mazePerfect, 0.040)
+
+        # maze without dead-ends
+        mazeSimple = simplifyMaze(maze)
+
+        from random import random
+        mazeWeight = [[random() for j in range(m)] for i in range(n)]
+
+        sol = findPath(maze)
+        sol2 = findPath(maze)
+
         # Saving
         import pickle
         o = open('test.bin', 'wb')
@@ -116,6 +116,7 @@ def test3():
 
     else:
         # Loading
+        import pickle
         o = open('test.bin', 'rb')
         #mazePerfect = pickle.load(o)
         maze = pickle.load(o)

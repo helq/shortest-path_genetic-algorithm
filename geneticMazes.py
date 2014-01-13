@@ -170,8 +170,8 @@ def main(folder):
     else:
         counters[counter] += 1
 
-    print "num of clones in the ejecution:", num_clones
-    print "num of mutations in the ejecution:", num_mutated
+    print "num of clones in the execution:", num_clones
+    print "num of mutations in the execution:", num_mutated
     print
 
     nameFinalPop = str(counter).zfill(3)+'-'+str(counters[counter]).zfill(3)
