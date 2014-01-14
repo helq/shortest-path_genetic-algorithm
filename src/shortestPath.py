@@ -1,3 +1,6 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
 from definitions import *
 import heapq, time
 
@@ -25,7 +28,7 @@ def shortestPath(maze, mazeW, start=None, end=None):
     parent [(i0,j0)] = None
 
     ##Relaxation
-    while weights: # total loops = n*m
+    while weights and hweights: # total loops = n*m if the graph is complete
         u = heapq.heappop(hweights)[1]
         uW = weights.pop(u)
 

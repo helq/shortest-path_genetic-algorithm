@@ -79,7 +79,7 @@ def createPNGfromMazeAndPaths(maze, paths=[], red_paths=[]):
 
     return png
 
-def saveMaze(mazePNG, name):
+def printMazePNG(mazePNG, name):
     import pypng.png as png
 
     writterPNG = png.Writer( len(mazePNG[0])

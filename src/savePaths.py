@@ -33,22 +33,22 @@ def loadPath(f):
     a.fromfile(f, lenA)
     return _decompressPath(lenPath, point0, a)
 
-LEFT = 0
-UP = 1
-RIGHT = 2
-DOWN = 3
-NO_MORE = 4
+pLEFT = 0
+pUP = 1
+pRIGHT = 2
+pDOWN = 3
+pNO_MORE = 4
 
 def _getMove(point1, point2):
-    if point2 == None: return NO_MORE
+    if point2 == None: return pNO_MORE
 
     i, j = point1
     k, l = point2
 
-    if (i, j-1) == (k, l): return LEFT
-    if (i-1, j) == (k, l): return UP
-    if (i, j+1) == (k, l): return RIGHT
-    if (i+1, j) == (k, l): return DOWN
+    if (i, j-1) == (k, l): return pLEFT
+    if (i-1, j) == (k, l): return pUP
+    if (i, j+1) == (k, l): return pRIGHT
+    if (i+1, j) == (k, l): return pDOWN
 
 def _compressPath(path0):
     path = [x[:] for x in path0]
@@ -61,7 +61,7 @@ def _compressPath(path0):
         b = 0
         for j in range(4*i, 4*i+4):
             m = _getMove(path[j], path[j+1])
-            if m == NO_MORE:
+            if m == pNO_MORE:
                 break
             b <<= 2
             b |= m
@@ -70,10 +70,10 @@ def _compressPath(path0):
     return a
 
 def _moveToPoint((i,j), m):
-    if m == LEFT  : return (i,j-1)
-    if m == UP    : return (i-1,j)
-    if m == RIGHT : return (i,j+1)
-    if m == DOWN  : return (i+1,j)
+    if m == pLEFT  : return (i,j-1)
+    if m == pUP    : return (i-1,j)
+    if m == pRIGHT : return (i,j+1)
+    if m == pDOWN  : return (i+1,j)
 
 def _decompressPath(lenPath, point0, a):
     path = [point0]

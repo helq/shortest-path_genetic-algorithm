@@ -4,7 +4,7 @@
 from src.definitions import *
 from src.createMazes import createRandomMaze, deleteWalls, simplifyMaze
 from src.pathsOfMaze import findPath, findIntersections, crossToPath
-from src.printMazes import palette, createPNGfromMazeAndPaths, saveMaze
+from src.printMazes import palette, createPNGfromMazeAndPaths, printMazePNG
 from src.genetics import crossingPaths, mutatePath
 
 def testPNG():
@@ -70,9 +70,9 @@ def testPNG():
     import pypng.png as png
 
     s = createPNGfromMazeAndPaths(exampleWalls)
-    saveMaze(s, "png1.png")
+    printMazePNG(s, "png1.png")
     s = createPNGfromMazeAndPaths(simple)
-    saveMaze(s, "png1simple.png")
+    printMazePNG(s, "png1simple.png")
 
 def test2():
     import pypng.png as png
@@ -82,12 +82,12 @@ def test2():
     mazeSimple = simplifyMaze(maze)
 
     s = createPNGfromMazeAndPaths(maze)
-    saveMaze(s, "png2.png")
+    printMazePNG(s, "png2.png")
     s = createPNGfromMazeAndPaths(mazeSimple)
-    saveMaze(s, "png2simple.png")
+    printMazePNG(s, "png2simple.png")
 
 def test3():
-    n, m = 30, 40
+    n, m = 30, 400
 
     if True:
         mazePerfect = createRandomMaze(n, m)
@@ -128,31 +128,31 @@ def test3():
     # saving
     # maze clean
     #s = createPNGfromMazeAndPaths(mazePerfect)
-    #saveMaze(s, "test3-Perfect.png")
+    #printMazePNG(s, "test3-Perfect.png")
 
     s = createPNGfromMazeAndPaths(maze)
-    saveMaze(s, "test3.png")
+    printMazePNG(s, "test3.png")
 
     s = createPNGfromMazeAndPaths(maze, [sol, sol2])
-    saveMaze(s, "test3-paths.png")
+    printMazePNG(s, "test3-paths.png")
 
     s = createPNGfromMazeAndPaths(mazeSimple)
-    saveMaze(s, "test3-simple.png")
+    printMazePNG(s, "test3-simple.png")
 
     solSon,k,l = crossingPaths(n, m, sol, sol2)
     s = createPNGfromMazeAndPaths(maze, [solSon])
-    saveMaze(s, "test3-son.png")
+    printMazePNG(s, "test3-son.png")
 
     # mutating
     solMut = mutatePath(maze, sol)
     s = createPNGfromMazeAndPaths(maze, [sol, solMut])
-    saveMaze(s, "test3-original-and-mutated.png")
+    printMazePNG(s, "test3-original-and-mutated.png")
 
     # finding shortest path
     from src.shortestPath import shortestPath
     solMut = shortestPath(maze, mazeWeight)
     s = createPNGfromMazeAndPaths(maze, [sol, solMut])
-    saveMaze(s, "test3-shortest-path.png")
+    printMazePNG(s, "test3-shortest-path.png")
 
 def test4():
     import pypng.png as png
