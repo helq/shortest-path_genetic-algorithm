@@ -32,7 +32,7 @@ def generateBasePNG(maze):
                 png[2*i+1][2*j] = WHITE
 
             # if the the celd have all the walls, then put black
-            if ALLWALLS & maze[i][j] != ALLWALLS:
+            if not allWalls(maze, i, j):
                 png[2*i+1][2*j+1] = WHITE
 
     for i in range(n):

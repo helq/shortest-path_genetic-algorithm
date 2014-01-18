@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-from src.createMazes import createRandomMaze, deleteWalls, simplifyMaze
+from src.createMazes import createRandomMaze, deleteWalls, simplifyMaze, createRandomWeight
 from src.pathsOfMaze import findPath
 from src.genetics import fitness, evolutionAlgo
 import src.savePaths as savePaths
@@ -107,13 +107,9 @@ def main(folder):
       o.close()
   else:
       maze = deleteWalls(createRandomMaze(n, m), wallsToDel)
-      mazeSimple = simplifyMaze(maze)
+      mazeSimple, _ = simplifyMaze(maze)
 
-      # an ellipse, well ... an elliptic paraboloid
-      ellipse = lambda i,j: ( ((i - float(n)/2)**2 / (5*float(n)/7)**2)
-                            + ((j - float(m)/2)**2 / (5*float(m)/7)**2)
-                            )
-      mazeWeight = [[2*random()/(ellipse(i,j)+1) for j in range(m)] for i in range(n)]
+      mazeWeight, _ = createRandomWeight(n, m)
       shortPath = shortestPath(mazeSimple, mazeWeight)
 
       o = open( path.join(folder, mazeFile), 'wb')

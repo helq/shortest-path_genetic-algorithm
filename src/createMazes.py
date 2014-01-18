@@ -95,6 +95,89 @@ def createRandomMaze(n, m, entrance=None, exit=None):
 
     return maze
 
+WALL = 1
+NO_WALL = 0
+def createRandomWeight(n, m, height=4):
+    # from printMazes import generateBasePNG
+
+    np, mp = height, (height*m)/n
+    mazeWeight = [[random() for j in range(m)] for i in range(n)]
+
+##    from src.printMazes import generateBasePNG
+##    mazeMask = createRandomMaze(np, mp)
+##    bMask = [[1-r for r in x ]for x in generateBasePNG(mazeMask)]
+    bMask = _generateBaseMask(np, mp)
+    mask = _upscale2(bMask, n, m)
+
+    for i in range(n):
+        for j in range(m):
+            mazeWeight[i][j] *= (1 + mask[i][j]*3)
+
+    return mazeWeight, mask
+
+def _upscale2(reticula, n, m):
+    np, mp = len(reticula), len(reticula[0])
+    toRet = [[0]*m for i in range(n)]
+
+    factorN, factorM = float(np-1)/(n-1), float(mp-1)/(m-1)
+    for i in range(n):
+        for j in range(m):
+            iN, jM = i*factorN, j*factorM
+            x, y = int(iN), int(jM)
+            if i == n-1: x = np-2
+            if j == m-1: y = mp-2
+            ul = (x,   y,   reticula[x][y])
+            ur = (x,   y+1, reticula[x][y+1])
+            dl = (x+1, y,   reticula[x+1][y])
+            dr = (x+1, y+1, reticula[x+1][y+1])
+            toRet[i][j] = bilinear_interpolation(iN, jM, [ul, ur, dl, dr])
+
+    return toRet
+
+def bilinear_interpolation(x, y, points):
+    # See formula at:  http://en.wikipedia.org/wiki/Bilinear_interpolation
+
+    points = sorted(points)               # order points by x, then by y
+    (x1, y1, q11), (_x1, y2, q12), (x2, _y1, q21), (_x2, _y2, q22) = points
+
+    if x1 != _x1 or x2 != _x2 or y1 != _y1 or y2 != _y2:
+        raise ValueError('points do not form a rectangle')
+    if not x1 <= x <= x2 or not y1 <= y <= y2:
+        raise ValueError('(x, y) not within the rectangle')
+
+    return (q11 * (x2 - x) * (y2 - y) +
+            q21 * (x - x1) * (y2 - y) +
+            q12 * (x2 - x) * (y - y1) +
+            q22 * (x - x1) * (y - y1)
+           ) / ((x2 - x1) * (y2 - y1) + 0.0)
+
+def _generateBaseMask(np, mp):
+    mazeMask = createRandomMaze(np, mp)
+
+    bMask = [ [WALL]*(2*mp-1) for i in range(2*np-1)]
+
+    # destroying walls
+    for i in range(np-1):
+        for j in range(mp-1):
+            if not existWall(DOWN, mazeMask[i][j]):
+                bMask[2*i+1][2*j] = NO_WALL
+            if not existWall(RIGHT, mazeMask[i][j]):
+                bMask[2*i][2*j+1] = NO_WALL
+
+            bMask[2*i][2*j] = NO_WALL
+
+    for i in range(np-1):
+        if not existWall(DOWN, mazeMask[i][mp-1]):
+            bMask[2*i+1][2*(mp-1)] = NO_WALL
+        bMask[2*i][2*(mp-1)] = NO_WALL
+    for j in range(mp-1):
+        if not existWall(RIGHT, mazeMask[np-1][j]):
+            bMask[2*(np-1)][2*j+1] = NO_WALL
+        bMask[2*(np-1)][2*j] = NO_WALL
+
+    bMask[2*(np-1)][2*(mp-1)] = NO_WALL
+
+    return bMask
 
 def deleteWalls(maze0, quant):
     maze = [x[:] for x in maze0]
@@ -241,12 +324,6 @@ def simplifyMaze(maze0, entrance=None, exit=None):
 
         r+=1
 
-    #print '\n'.join([' '.join([str(1 if c!=None else 0).rjust(2) for c
-    #                in x]) for x in mazeDFS])
-    #print
-    #print '\n'.join([' '.join([str(1 if isMarked(c) else 0).rjust(2) for c
-    #                in x]) for x in maze])
-
     for i in range(n):
         for j in range(m):
             if not isMarked(maze[i][j]):
@@ -254,6 +331,12 @@ def simplifyMaze(maze0, entrance=None, exit=None):
             else:
                 quitMark(maze, i, j)
 
-    #print r
-    return maze
+    # total unrearcheable cells
+    totalUnrearcheable = 0
+    for i in range(n):
+        for j in range(m):
+            if allWalls(maze, i, j):
+                totalUnrearcheable+=1
+
+    return maze, totalUnrearcheable/float(n*m)
 

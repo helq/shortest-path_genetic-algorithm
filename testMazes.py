@@ -87,7 +87,7 @@ def test2():
     printMazePNG(s, "png2simple.png")
 
 def test3():
-    n, m = 30, 400
+    n, m = 60, 70
 
     if True:
         mazePerfect = createRandomMaze(n, m)
@@ -186,8 +186,53 @@ def test5():
     writterPNG.write(f, s)
     f.close()
 
+def test6():
+    n, m = 300,400
+
+    if True:
+        mazePerfect = createRandomMaze(n, m)
+        maze = deleteWalls(mazePerfect, 0.07)
+        mazeSimple, per = simplifyMaze(maze)
+        from src.createMazes import createRandomWeight
+        mazeWeight, mask = createRandomWeight(n, m, 70)
+
+        # Saving
+        import pickle
+        o = open('test.bin', 'wb')
+        pickle.dump(maze, o)
+        pickle.dump(mazeWeight, o)
+
+    # outdated
+    #else:
+        ## Loading
+        #import pickle
+        #o = open('test.bin', 'rb')
+        ##mazePerfect = pickle.load(o)
+        #maze = pickle.load(o)
+        #mazeWeight = pickle.load(o)
+
+    print per # total unrearcheable cells
+
+    # finding shortest path
+    from src.shortestPath import shortestPath
+    sol = shortestPath(maze, mazeWeight)
+    s = createPNGfromMazeAndPaths(mazeSimple, [sol])
+    printMazePNG(s, "test5.png")
+
+
+    toPNG = [[int(255*(1-j)) for j in i] for i in mask]
+    import pypng.png as png
+    writterPNG = png.Writer( len(toPNG[0]), len(toPNG)
+                           , greyscale=True
+                           , bitdepth=8)
+    f = open("testing.png", 'wb')
+    writterPNG.write(f, toPNG)
+    f.close()
+
+
 #testPNG()
 #test2()
-test3()
+#test3()
 #test4()
 #test5()
+test6()

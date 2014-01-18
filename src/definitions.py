@@ -16,6 +16,7 @@ def putWall(wall, maze, i, j):
     maze[i][j] = wall | maze[i][j]
 def quitWall(wall, maze, i, j):
     maze[i][j] = wall ^ maze[i][j]
+allWalls = lambda maze, i, j: ALLWALLS & maze[i][j] == ALLWALLS
 
 
 isMarked = lambda c: bool(c & MARK)

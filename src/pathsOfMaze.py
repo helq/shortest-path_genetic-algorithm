@@ -79,7 +79,7 @@ def findPath(maze0, entrance=None, exit=None):
         return map(lambda x: x[:2], stack)
 
 def findIntersections(height, width, path1, path2):
-    maze = [[None for j in range(width)] for i in range(height)]
+    maze = [[None]*width for i in range(height)]
 
     for k in range(len(path2)):
         (i,j) = path2[k]
@@ -87,20 +87,22 @@ def findIntersections(height, width, path1, path2):
             maze[i][j] = k
 
     cross = []
-    isInABlock = False
+    inABlock = False
     for k in range(len(path1)):
         (i,j) = path1[k]
 
         if i>=0 and i<height and j>=0 and j<width:
             mazeij = maze[i][j]
             if mazeij != None:
-                if isInABlock:
+                #    previously in a block, and the block is really the same
+                if ( inABlock and len(cross) > 0
+                              and abs(cross[-1][-1][1] - mazeij) == 1):
                     cross[-1][-1] = (k, mazeij)
                 else:
                     cross.append( [(k, mazeij), (k, mazeij)] )
-                isInABlock = True
+                    inABlock = True
             else:
-                isInABlock = False
+                inABlock = False
 
     return cross
 
