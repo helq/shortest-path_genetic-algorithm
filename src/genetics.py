@@ -40,7 +40,7 @@ def crossingPaths(height, width, path1, path2):
     else:
         return path2[:s2k] + path1[s1k:f1l:-1] + path2[f2l:], k, l
 
-def mutatePath(maze0, path):
+def mutatePath(maze0, path, border=5):
     maze = [x[:] for x in maze0]
     height = len(maze)
     width = len(maze[0])
@@ -49,6 +49,27 @@ def mutatePath(maze0, path):
     sizeMutation = int(floor(max(0.05*lenPath, lenPath*(random()/5))))
     startMut = randint(1, lenPath-sizeMutation-2)
     endMut = startMut+sizeMutation
+
+    maxI, maxJ = -1, -1
+    minI, minJ = height, width
+    for i,j in path[startMut:endMut+1]:
+        if i > maxI: maxI = i
+        if j > maxJ: maxJ = j
+        if i < minI: minI = i
+        if j < minJ: minJ = j
+    minI = max(minI-border, -1)
+    minJ = max(minJ-border, -1)
+    maxI = min(maxI+border, height)
+    maxJ = min(maxJ+border, width)
+
+    for i in range(minI, maxI+1):
+        if i>=0 and i<height:
+            if minJ>=0:    addMark(maze, i, minJ)
+            if maxJ<width: addMark(maze, i, maxJ)
+    for j in range(minJ, maxJ+1):
+        if j>=0 and j<width:
+            if minI>=0:     addMark(maze, minI, j)
+            if maxI<height: addMark(maze, maxI, j)
 
     for (i,j) in path[:startMut]:
         if i>=0 and i<height and j>=0 and j<width:
@@ -60,7 +81,9 @@ def mutatePath(maze0, path):
     startPoint = path[startMut] + (NOTHING,)
     endPoint   = path[endMut] + (NOTHING,)
 
-    return path[:startMut] + findPath(maze, startPoint, endPoint) + path[endMut+1:]
+    mutated = path[:startMut] + findPath(maze, startPoint, endPoint) + path[endMut+1:]
+
+    return mutated, path[startMut], path[endMut]
 
 def fitness(mazeWeight, path):
     height = len(mazeWeight)
@@ -74,8 +97,9 @@ def fitness(mazeWeight, path):
 
 def evolutionAlgo( maze, mazeWeight, initialPopulation, mutPercent
                  , totalPopulation, totalIterations, numberOfBadIndividuals
-                 , randomVariableFunction):
+                 , isInitPopInmut, randomVariableFunction):
 
+    lenInitPop = len(initialPopulation)
     def getTwoNumbers(n):
         b = a = int( n * randomVariableFunction(random()) )
         while a == b:
@@ -86,18 +110,29 @@ def evolutionAlgo( maze, mazeWeight, initialPopulation, mutPercent
     width = len(maze[0])
 
     population = [
-                    (fitness(mazeWeight, individual), individual[:])
+                    (fitness(mazeWeight, individual), individual[:], isInitPopInmut)
                     for individual in initialPopulation
                  ]
     heapify(population)
 
     num_clones = 0
     num_mutated = 0
-    for i in range(totalIterations):
+    i = 0
+    while i < totalIterations:
         if len(population) >= totalPopulation:
-            toKill = randint(totalPopulation-numberOfBadIndividuals, totalPopulation-1)
             population.sort()
-            population.pop(toKill)
+            someone_killed = False
+            k = 0
+            while not someone_killed:
+                if initialPopulation and numberOfBadIndividuals + k <= lenInitPop + 1:
+                    k+=1
+                toKill = randint(
+                            totalPopulation-numberOfBadIndividuals-k,
+                            totalPopulation-1
+                            )
+                if not population[toKill][2]:
+                    population.pop(toKill)
+                    someone_killed = True
 
             # deleting repeated individuals (clones XD)
             j=0
@@ -108,25 +143,27 @@ def evolutionAlgo( maze, mazeWeight, initialPopulation, mutPercent
                 else:
                     j+=1
 
-
+        # mutate
         if random() < mutPercent:
             toMutate = population[randint(0, len(population)-1)]
-            mutated = mutatePath(maze, toMutate[1])
+            mutated, p1, p2 = mutatePath(maze, toMutate[1])
 
-            # is realy a mutation?
+            # is really a mutation?
             if mutated != toMutate[1]:
                 num_mutated += 1
-                heappush( population, (fitness(mazeWeight, mutated), mutated) )
+                heappush( population, (fitness(mazeWeight, mutated), mutated, False) )
+                i+=1
+        # combine
         else:
             n1, n2 = getTwoNumbers(len(population))
             path1 = population[n1][1]
             path2 = population[n2][1]
             newPath = crossingPaths(height, width, path1, path2)
-            if newPath == None:
-                continue
-            else:
+            # is really a new path
+            if newPath != None:
                 heappush( population
-                        , (fitness(mazeWeight, newPath[0]), newPath[0]) )
+                        , (fitness(mazeWeight, newPath[0]), newPath[0], False) )
+                i+=1
 
     population.sort()
     # killing clones

@@ -109,3 +109,17 @@ def findIntersections(height, width, path1, path2):
 def crossToPath( cross, path1 ):
     [(s1,s2), (f1,f2)] = cross
     return [path1[k] for k in range(s1, f1+1)]
+
+def canFindSolutionFromPaths(n, m, shortPath, paths):
+    maze = [[0]*m for _ in range(n)]
+
+    for p in paths:
+        for i,j in p:
+            if i>=0 and i<n and j>=0 and j<m:
+                maze[i][j] += 1
+
+    for i,j in shortPath:
+        if i>=0 and i<n and j>=0 and j<m:
+            if maze[i][j] == 0:
+                return False
+    return True

@@ -35,6 +35,7 @@ def main(pathsFiles, rootFolder, printDataBin, compareWithShortPath):
     maze = pickle.load(o)
     mazeSimple = pickle.load(o)
     mazeWeigth = pickle.load(o)
+    inaccesibleCellsPercent = pickle.load(o) # unnecesary
     shortPath = loadPath(o)
     o.close()
 

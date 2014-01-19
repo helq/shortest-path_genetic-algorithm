@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from src.createMazes import createRandomMaze, deleteWalls, simplifyMaze, createRandomWeight
-from src.pathsOfMaze import findPath
+from src.pathsOfMaze import findPath, canFindSolutionFromPaths
 from src.genetics import fitness, evolutionAlgo
 import src.savePaths as savePaths
 from src.shortestPath import shortestPath
@@ -32,6 +32,7 @@ GLOBAL DEFINED:
   -i --totalIterations=num   number of iterations (default: 200)
   -b --badIndividuals=num    number of `bad' individuals, they have the worst
                              fitness value (default: 10)
+  -V --initPopInvulnrb=bool  make Initial Population Invulnerable (default: 1)
   -c --chooseFunction=funct  the individuals for mutation are elected randomly
                              according to this function (have to be writed in
                              python syntax. ex: `-f "lambda x: x"')
@@ -84,6 +85,8 @@ def main(folder):
   sizeInitial     = getParameter(['sizeInitial',     's'], 15        , int)
   multiplesExec   = getParameter(['multiplesExec',   'M'], 1         , int)
   manyFinalPop    = getParameter(['manyFinalPop',    'P'], 1         , int)
+  toBool = lambda s: False if s in ["False", "false", "f", "F", "0"] else bool(s)
+  initPopInvulnrb = getParameter(['initPopInvulnrb', 'V'], True      , toBool)
   #chooseFunction = lambda x: (0.6/0.5)*x if x<0.6 else (x-1)*((1-0.5)/(1-0.6)) + 1
 
   # If the folder doesn't exisit
@@ -103,11 +106,12 @@ def main(folder):
       maze = pickle.load(o)
       mazeSimple = pickle.load(o)
       mazeWeight = pickle.load(o)
+      inaccesibleCellsPercent = pickle.load(o)
       shortPath = savePaths.loadPath(o)
       o.close()
   else:
       maze = deleteWalls(createRandomMaze(n, m), wallsToDel)
-      mazeSimple, _ = simplifyMaze(maze)
+      mazeSimple, inaccesibleCellsPercent = simplifyMaze(maze)
 
       mazeWeight, _ = createRandomWeight(n, m)
       shortPath = shortestPath(mazeSimple, mazeWeight)
@@ -119,26 +123,55 @@ def main(folder):
       pickle.dump(maze, o)
       pickle.dump(mazeSimple, o)
       pickle.dump(mazeWeight, o)
+      pickle.dump(inaccesibleCellsPercent, o)
       savePaths.savePath(shortPath, o)
       o.close()
 
   print "Starting ..."
   print "Maze dimensions:", (n, m)
   print "Walls Deleted (percentage):", wallsToDel
-  print "Shortest Path: ", fitness(mazeWeight, shortPath)
+  print "Inaccesible cells (percentage):", inaccesibleCellsPercent
+  fitnessShortPath = fitness(mazeWeight, shortPath)
+  print "Shortest Path: ", fitnessShortPath
   print
   print "=== Global variables setted to: ==="
   print "Mutation (percentage):", mutPercent
   print "Total iterations:", totalIterations
   print "Number of bad individuals:", badIndividuals
+  print "Initial Population Invulnerable:", initPopInvulnrb
   print
 
   print "== Statistics =="
   print
 
-  for _ in range(multiplesExec):
+  nameStatisticFinal = path.join(folder, "final.csv")
+  if not os.path.exists(nameStatisticFinal):
+      statistics_final = open(nameStatisticFinal, 'a')
+      statistics_final.write("Name; ")
+      statistics_final.write("% mutation; ")
+      statistics_final.write("total iterations; ")
+      statistics_final.write("bad Individuals; ")
+      statistics_final.write("invulnerable initPop; ")
+      statistics_final.write("Len Initial Population; ")
+      statistics_final.write("Total Population; ")
+      statistics_final.write("Best Init Path; ")
+      statistics_final.write("Worst Init Path; ")
+      statistics_final.write("Can be made from Init paths?; ")
+      statistics_final.write("clones; ")
+      statistics_final.write("mutations; ")
+      statistics_final.write("Best final Path; ")
+      statistics_final.write("Worst final Path; ")
+      statistics_final.write("Ratio best-shortest paths; ")
+      statistics_final.write("improvement from initial; ")
+      statistics_final.write("Can me made from Final paths?\n")
+  else:
+      statistics_final = open(nameStatisticFinal, 'a')
+
+  statistics_initial = open( path.join(folder, "initial.csv"), 'a' )
+
+  for i in range(multiplesExec):
     ######################## initial Population #######################
-    if initialPop == None or multiplesExec > 1:
+    if initialPop == None:
         o_counter = open( path.join(folder, folderInitialPop, 'counter'),'rb')
         counter = int(o_counter.read())
         o_counter.close()
@@ -160,16 +193,29 @@ def main(folder):
         o = open( path.join(folder, folderInitialPop, nameInitialPop), 'rb')
         initialPopulation = savePaths.loadListOfPaths(o)
         o.close()
+        if os.path.exists( path.join(folder, folderInitialPop, 'counter')):
+            initialPop = str(counter+1).zfill(3)
 
     ##################################################################
 
-    print "Initial Population", nameInitialPop
-    print "  initial size population:", len(initialPopulation)
-    print "  total population:", totalPopulation
-    print "  best path: ", fitness(mazeWeight, initialPopulation[0])
-    print "  worst path:", fitness(mazeWeight, initialPopulation[-1])
-    print
+    ############################ statistics ############################
+    def printSave(t, d, others="", final=False):
+        print t, d, others
+        statistics_initial.write(str(d) + ("\n" if final else "; "))
 
+    bestInitPop = fitness(mazeWeight, initialPopulation[0])
+    ratioBestShortPathInitPop = float(bestInitPop)/fitnessShortPath
+    worstInitPop = fitness(mazeWeight, initialPopulation[-1])
+    canInit = canFindSolutionFromPaths(n, m, shortPath, initialPopulation)
+    printSave("Initial Population",           nameInitialPop)
+    printSave("  initial size population:",   len(initialPopulation))
+    printSave("  total population:",          totalPopulation)
+    printSave("  best path: ",                bestInitPop)
+    printSave("  worst path:",                worstInitPop)
+    printSave("  ratio best-shortest paths:", ratioBestShortPathInitPop)
+    printSave("  Is posible find the Shortest-Path from paths:", canInit, final=True)
+    print
+    ####################################################################
 
     ####################### final population #######################
     o_counters = open( path.join(folder, folderFinalPop, 'counters'),'rb')
@@ -178,19 +224,44 @@ def main(folder):
     if len(counters) <= counter:
         counters.extend( [-1]*(counter-len(counters)+1) )
 
+    def printSave(t, d, others="", final=False):
+        print t, d, others
+        statistics_final.write(str(d) + ("\n" if final else "; "))
+
     for i in range(manyFinalPop):
         finalPopulation, num_clones, num_mutated = evolutionAlgo(
                 mazeSimple, mazeWeight, initialPopulation , mutPercent,
                 totalPopulation, totalIterations , badIndividuals,
-                chooseFunction)
+                initPopInvulnrb, chooseFunction)
 
         counters[counter] += 1
+
+        ############################ statistics ############################
         nameFinalPop = str(counter).zfill(3)+'-'+str(counters[counter]).zfill(3)
-        print "  Final Population #", nameFinalPop
-        print "    num of clones in the execution:", num_clones
-        print "    num of mutations in the execution:", num_mutated
-        print "    best path: ", fitness(mazeWeight, finalPopulation[0])
-        print "    worst path:", fitness(mazeWeight, finalPopulation[-1])
+        best = fitness(mazeWeight, finalPopulation[0])
+        ratioBestShortPath = float(best)/fitnessShortPath
+        can = canFindSolutionFromPaths(n, m, shortPath, finalPopulation)
+
+        printSave("  Final Population #", nameFinalPop)
+        statistics_final.write(str(mutPercent)+"; ")
+        statistics_final.write(str(totalIterations)+"; ")
+        statistics_final.write(str(badIndividuals)+"; ")
+        statistics_final.write(str(initPopInvulnrb)+"; ")
+        statistics_final.write(str(len(initialPopulation))+"; ")
+        statistics_final.write(str(totalPopulation)+"; ")
+        statistics_final.write(str(bestInitPop)+"; ")
+        statistics_final.write(str(worstInitPop)+"; ")
+        statistics_final.write(str(canInit)+"; ")
+        printSave("    num of clones in the execution:", num_clones,
+                  str(100*float(num_clones)/totalIterations)+"%")
+        printSave("    num of mutations in the execution:", num_mutated,
+                  str(100*float(num_mutated)/totalIterations)+"%")
+        printSave("    best path: ", best)
+        printSave("    worst path:", fitness(mazeWeight, finalPopulation[-1]))
+        printSave("    ratio best-shortest paths:", ratioBestShortPath)
+        printSave("    improvement:", ratioBestShortPathInitPop -
+                                      ratioBestShortPath)
+        printSave("    Is posible find the Shortest-Path from paths:", can, final=True)
         print
 
         o = open( path.join(folder, folderFinalPop, nameFinalPop), 'wb')
@@ -198,11 +269,15 @@ def main(folder):
         pickle.dump(num_clones, o)
         pickle.dump(num_mutated, o)
         o.close()
+        ####################################################################
 
     # increment counters
     o_counters = open( path.join(folder, folderFinalPop, 'counters'),'wb')
     o_counters.write(str(counters))
     o_counters.close()
+
+  statistics_initial.close()
+  statistics_final.close()
 
 
 if __name__ == "__main__":
