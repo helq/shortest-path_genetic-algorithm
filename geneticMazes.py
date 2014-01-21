@@ -45,7 +45,6 @@ GLOBAL DEFINED:
   -I --initialPop=num        use an exisisting population (num of the
                              population in """+folderInitialPop+""")
                              This overwrite the option `-s'
-                             Deactivated when `-M' is setted
 
 PER POPULATION DEFINED:
   -s --sizeInitial=num       size of initial population (is a global option
@@ -193,8 +192,11 @@ def main(folder):
         o = open( path.join(folder, folderInitialPop, nameInitialPop), 'rb')
         initialPopulation = savePaths.loadListOfPaths(o)
         o.close()
-        if os.path.exists( path.join(folder, folderInitialPop, 'counter')):
-            initialPop = str(counter+1).zfill(3)
+        nameNext = str(counter+1).zfill(3)
+        if os.path.exists( path.join(folder, folderInitialPop, nameNext)):
+            initialPop = nameNext
+        else:
+            initialPop = None
 
     ##################################################################
 
@@ -284,7 +286,7 @@ if __name__ == "__main__":
     if  'folder' in options: folder = options['folder']
     elif     'F' in options: folder = options['F']
     else:
-        print "you need set a folder"
+        print "you must set a folder"
         print help_message
         exit(1)
 

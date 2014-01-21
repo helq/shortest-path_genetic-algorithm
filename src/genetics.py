@@ -46,7 +46,7 @@ def mutatePath(maze0, path, border=5):
     width = len(maze[0])
 
     lenPath = len(path)
-    sizeMutation = int(floor(max(0.05*lenPath, lenPath*(random()/5))))
+    sizeMutation = int(max(0.05*lenPath, lenPath*(random()/5)))
     startMut = randint(1, lenPath-sizeMutation-2)
     endMut = startMut+sizeMutation
 
@@ -124,7 +124,7 @@ def evolutionAlgo( maze, mazeWeight, initialPopulation, mutPercent
             someone_killed = False
             k = 0
             while not someone_killed:
-                if initialPopulation and numberOfBadIndividuals + k <= lenInitPop + 1:
+                if isInitPopInmut and numberOfBadIndividuals + k <= lenInitPop + 1:
                     k+=1
                 toKill = randint(
                             totalPopulation-numberOfBadIndividuals-k,
@@ -176,7 +176,7 @@ def evolutionAlgo( maze, mazeWeight, initialPopulation, mutPercent
             j+=1
 
     return (
-                [individual[1] for individual in sorted(population)]
+                [individual[1] for individual in population]
               , num_clones
               , num_mutated
            )
