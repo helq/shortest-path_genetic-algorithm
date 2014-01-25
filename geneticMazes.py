@@ -138,6 +138,7 @@ def main(folder):
   print "Total iterations:", totalIterations
   print "Number of bad individuals:", badIndividuals
   print "Initial Population Invulnerable:", initPopInvulnrb
+  print "Total population:", totalPopulation
   print
 
   print "== Statistics =="
@@ -171,13 +172,14 @@ def main(folder):
   for i in range(multiplesExec):
     ######################## initial Population #######################
     if initialPop == None:
+        new = True
         o_counter = open( path.join(folder, folderInitialPop, 'counter'),'rb')
         counter = int(o_counter.read())
         o_counter.close()
 
         initialPopulation = [findPath(mazeSimple) for i in range(sizeInitial)]
         initialPopulation.sort(key=lambda i: fitness(mazeWeight, i))
-        nameInitialPop = str(counter).zfill(3)
+        nameInitialPop = str(counter).zfill(5)
 
         o = open( path.join(folder, folderInitialPop, nameInitialPop), 'wb')
         savePaths.saveListOfPaths(initialPopulation, o)
@@ -187,12 +189,13 @@ def main(folder):
         o_counter.write(str(counter+1))
         o_counter.close()
     else:
+        new = False
         counter = int(initialPop, 10)
-        nameInitialPop = str(counter).zfill(3)
+        nameInitialPop = str(counter).zfill(5)
         o = open( path.join(folder, folderInitialPop, nameInitialPop), 'rb')
         initialPopulation = savePaths.loadListOfPaths(o)
         o.close()
-        nameNext = str(counter+1).zfill(3)
+        nameNext = str(counter+1).zfill(5)
         if os.path.exists( path.join(folder, folderInitialPop, nameNext)):
             initialPop = nameNext
         else:
@@ -203,7 +206,8 @@ def main(folder):
     ############################ statistics ############################
     def printSave(t, d, others="", final=False):
         print t, d, others
-        statistics_initial.write(str(d) + ("\n" if final else "; "))
+        if new:
+            statistics_initial.write(str(d) + ("\n" if final else "; "))
 
     bestInitPop = fitness(mazeWeight, initialPopulation[0])
     ratioBestShortPathInitPop = float(bestInitPop)/fitnessShortPath
@@ -211,7 +215,6 @@ def main(folder):
     canInit = canFindSolutionFromPaths(n, m, shortPath, initialPopulation)
     printSave("Initial Population",           nameInitialPop)
     printSave("  initial size population:",   len(initialPopulation))
-    printSave("  total population:",          totalPopulation)
     printSave("  best path: ",                bestInitPop)
     printSave("  worst path:",                worstInitPop)
     printSave("  ratio best-shortest paths:", ratioBestShortPathInitPop)
@@ -239,7 +242,7 @@ def main(folder):
         counters[counter] += 1
 
         ############################ statistics ############################
-        nameFinalPop = str(counter).zfill(3)+'-'+str(counters[counter]).zfill(3)
+        nameFinalPop = str(counter).zfill(5)+'-'+str(counters[counter]).zfill(5)
         best = fitness(mazeWeight, finalPopulation[0])
         ratioBestShortPath = float(best)/fitnessShortPath
         can = canFindSolutionFromPaths(n, m, shortPath, finalPopulation)
